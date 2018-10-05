@@ -39,9 +39,17 @@ int main(int argc, char** argv) {
 	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
+	GLenum err = glewInit();
+	if(err != GLEW_OK) {
+		std::cout << "Error: " << glewGetErrorString(err) << std::endl;
+		std::cin.get();
+		return -1;
+	}
+	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+
 	bool close = false;
 	while(!close) {
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glBegin(GL_TRIANGLES);
