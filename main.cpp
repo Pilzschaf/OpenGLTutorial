@@ -25,6 +25,12 @@ typedef uint64_t uint64;
 typedef float float32;
 typedef double float64;
 
+struct Vertex {
+	float32 x;
+	float32 y;
+	float32 z;
+};
+
 int main(int argc, char** argv) {
 	SDL_Window* window;
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -47,16 +53,27 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
+	Vertex vertices[] = {
+		Vertex{-0.5f, -0.5f, 0.0f},
+		Vertex{0.0f, 0.5f, 0.0f},
+		Vertex{0.5f, -0.5f, 0.0f}
+	};
+	uint32 numVertices = 3;
+
+	GLuint vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), vertices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(struct Vertex,x));
+
 	bool close = false;
 	while(!close) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBegin(GL_TRIANGLES);
-		glVertex2f(-0.5f, -0.5f);
-		glVertex2f(0.0f, 0.5f);
-		glVertex2f(0.5f, -0.5f);
-		glEnd();
+		glDrawArrays(GL_TRIANGLES, 0, numVertices);
 
 		SDL_GL_SwapWindow(window);
 		
