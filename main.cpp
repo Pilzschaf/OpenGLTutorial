@@ -12,24 +12,8 @@
 #include <SDL2/SDL.h>
 #endif
 
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef float float32;
-typedef double float64;
-
-struct Vertex {
-	float32 x;
-	float32 y;
-	float32 z;
-};
+#include "defines.h"
+#include "vertex_buffer.h"
 
 int main(int argc, char** argv) {
 	SDL_Window* window;
@@ -60,20 +44,17 @@ int main(int argc, char** argv) {
 	};
 	uint32 numVertices = 3;
 
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), vertices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(struct Vertex,x));
+	VertexBuffer vertexBuffer(vertices, numVertices);
+	vertexBuffer.unbind();
 
 	bool close = false;
 	while(!close) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		vertexBuffer.bind();
 		glDrawArrays(GL_TRIANGLES, 0, numVertices);
+		vertexBuffer.unbind();
 
 		SDL_GL_SwapWindow(window);
 		
