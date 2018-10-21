@@ -1,42 +1,72 @@
+#include <Windows.h>
 #include <iostream>
-#define GLEW_STATIC
-#include <GL/glew.h>
-#define SDL_MAIN_HANDLED
+#include <cassert>
+#include <cstdint>
 
-#ifdef _WIN32
-#include <SDL.h>
-#pragma comment(lib, "SDL2.lib")
-#pragma comment(lib, "glew32s.lib")
-#pragma comment(lib, "opengl32.lib")
-#else
-#include <SDL2/SDL.h>
-#endif
-
-#include "defines.h"
 #include "vertex_buffer.h"
 #include "shader.h"
 
-int main(int argc, char** argv) {
-	SDL_Window* window;
-	SDL_Init(SDL_INIT_EVERYTHING);
+#pragma comment(lib, "opengl32.lib")
 
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
-	SDL_GLContext glContext = SDL_GL_CreateContext(window);
-
-	GLenum err = glewInit();
-	if(err != GLEW_OK) {
-		std::cout << "Error: " << glewGetErrorString(err) << std::endl;
-		std::cin.get();
-		return -1;
+LRESULT CALLBACK MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	switch (uMsg) {
+	case WM_CLOSE:
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
 	}
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+int main() {
+	HINSTANCE hInstance = GetModuleHandle(0);
+	HWND hWnd;
+	WNDCLASS wc;
+	MSG msg;
+
+	wc = {};
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.lpfnWndProc = MessageHandler;
+	wc.hInstance = hInstance;
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.lpszClassName = "WINAPITest";
+
+	assert(RegisterClass(&wc));
+
+	hWnd = CreateWindow("WINAPITest", "WinAPI Tutorial", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, 0, 0, hInstance, 0);
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
+
+	std::cout << "Created window" << std::endl;
+
+	HDC hdc = GetDC(hWnd);
+
+	PIXELFORMATDESCRIPTOR pixelFormat = {};
+	pixelFormat.nSize = sizeof(pixelFormat);
+	pixelFormat.nVersion = 1;
+	pixelFormat.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+	pixelFormat.cColorBits = 24;
+	pixelFormat.cRedBits = 8;
+	pixelFormat.cGreenBits = 8;
+	pixelFormat.cBlueBits = 8;
+	pixelFormat.cAlphaBits = 8;
+
+	int index = ChoosePixelFormat(hdc, &pixelFormat);
+	PIXELFORMATDESCRIPTOR supportedPixelFormat;
+	DescribePixelFormat(hdc, index, sizeof(PIXELFORMATDESCRIPTOR), &supportedPixelFormat);
+	SetPixelFormat(hdc, index, &supportedPixelFormat);
+
+	HGLRC context = wglCreateContext(hdc);
+	if (!wglMakeCurrent(hdc, context)) {
+		std::cout << "OpenGL context creation failed" << std::endl;
+		assert(false);
+		return 0;
+	}
+	
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+
+	loadOpenGLFunctions();
 
 	Vertex vertices[] = {
 		Vertex{-0.5f, -0.5f, 0.0f},
@@ -51,24 +81,23 @@ int main(int argc, char** argv) {
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 
-	bool close = false;
-	while(!close) {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	bool running = true;
+	while (running) {
+		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT) {
+				running = false;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		vertexBuffer.bind();
 		glDrawArrays(GL_TRIANGLES, 0, numVertices);
 		vertexBuffer.unbind();
 
-		SDL_GL_SwapWindow(window);
-		
-		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) {
-				close = true;
-			}
-		}
+		SwapBuffers(hdc);
 	}
-
-	return 0;
 }

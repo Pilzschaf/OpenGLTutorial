@@ -1,36 +1,34 @@
 #pragma once
-#include <GL/glew.h>
-
 #include "defines.h"
 
 struct VertexBuffer {
-    VertexBuffer(void* data, uint32 numVertices) {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+	VertexBuffer(void* data, uint32 numVertices) {
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
 
-        glGenBuffers(1, &bufferId);
-        glBindBuffer(GL_ARRAY_BUFFER, bufferId);
-        glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), data, GL_STATIC_DRAW);
+		glGenBuffers(1, &bufferId);
+		glBindBuffer(GL_ARRAY_BUFFER, bufferId);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(Vertex), data, GL_STATIC_DRAW);
 
-        glEnableVertexAttribArray(0);
-	    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(struct Vertex,x));
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
 
-        glBindVertexArray(0);
-    }
+		glBindVertexArray(0);
+	}
 
-    virtual ~VertexBuffer() {
-        glDeleteBuffers(1, &bufferId);
-    }
+	virtual ~VertexBuffer() {
+		glDeleteBuffers(1, &bufferId);
+	}
 
-    void bind() {
-       glBindVertexArray(vao);
-    }
+	void bind() {
+		glBindVertexArray(vao);
+	}
 
-    void unbind() {
-        glBindVertexArray(0);
-    }
+	void unbind() {
+		glBindVertexArray(0);
+	}
 
 private:
-    GLuint bufferId;
-    GLuint vao;
+	GLuint bufferId;
+	GLuint vao;
 };
