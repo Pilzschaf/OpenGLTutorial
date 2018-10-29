@@ -41,11 +41,18 @@ GLuint Shader::compile(std::string shaderSource, GLenum type) {
 
 std::string Shader::parse(const char* filename) {
     FILE* file;
-    file = fopen(filename, "rb");
-    if(file == nullptr) {
-        std::cout << "File " << filename << " not found" << std::endl;
-        return 0;
-    }
+#ifdef _WIN32
+	if (fopen_s(&file, filename, "rb") != 0) {
+		std::cout << "File " << filename << " not found" << std::endl;
+		return "";
+	}
+#else
+	file = fopen(filename, "rb");
+	if (file == nullptr) {
+		std::cout << "File " << filename << " not found" << std::endl;
+		return "";
+	}
+#endif
 
     std::string contents;
     fseek(file, 0, SEEK_END);
