@@ -47,7 +47,7 @@ std::string Shader::parse(const char* filename) {
 		return "";
 	}
 #else
-	file = fopen_s(filename, "rb");
+	file = fopen(filename, "rb");
 	if (file == nullptr) {
 		std::cout << "File " << filename << " not found" << std::endl;
 		return "";
