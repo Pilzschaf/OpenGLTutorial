@@ -27,7 +27,9 @@ int main(int argc, char** argv) {
 	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
+	uint32 flags = SDL_WINDOW_OPENGL;
+
+	window = SDL_CreateWindow("C++ OpenGL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, flags);
 	SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
 	GLenum err = glewInit();
@@ -54,6 +56,13 @@ int main(int argc, char** argv) {
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 
+	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
+	uint64 lastCounter = SDL_GetPerformanceCounter();
+	float32 delta = 0.0f;
+
+	// Wireframe
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	bool close = false;
 	while(!close) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -71,6 +80,12 @@ int main(int argc, char** argv) {
 				close = true;
 			}
 		}
+
+		uint64 endCounter = SDL_GetPerformanceCounter();
+		uint64 counterElapsed = endCounter - lastCounter;
+		delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
+		uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
+		lastCounter = endCounter;
 	}
 
 	return 0;
