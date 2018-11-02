@@ -43,12 +43,14 @@ int main(int argc, char** argv) {
 	Vertex vertices[] = {
 		Vertex{-0.5f, -0.5f, 0.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
-		Vertex{0.0f, 0.5f, 0.0f,
+		Vertex{-0.5f, 0.5f, 0.0f,
 		0.0, 1.0f, 0.0f, 1.0f},
 		Vertex{0.5f, -0.5f, 0.0f,
-		0.0f, 0.0f, 1.0f, 1.0f}
+		0.0f, 0.0f, 1.0f, 1.0f},
+		Vertex{0.5f, 0.5f, 0.0f,
+		1.0f, 0.0f, 0.0f, 1.0f},
 	};
-	uint32 numVertices = 3;
+	uint32 numVertices = 4;
 
 	VertexBuffer vertexBuffer(vertices, numVertices);
 	vertexBuffer.unbind();
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		vertexBuffer.bind();
-		glDrawArrays(GL_TRIANGLES, 0, numVertices);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
 		vertexBuffer.unbind();
 
 		SDL_GL_SwapWindow(window);
