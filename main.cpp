@@ -14,6 +14,7 @@
 
 #include "defines.h"
 #include "vertex_buffer.h"
+#include "index_buffer.h"
 #include "shader.h"
 
 int main(int argc, char** argv) {
@@ -52,6 +53,14 @@ int main(int argc, char** argv) {
 	};
 	uint32 numVertices = 4;
 
+	uint32 indices[] = {
+		0, 1, 2,
+		1, 2, 3
+	};
+	uint32 numIndices = 6;
+
+	IndexBuffer indexBuffer(indices, numIndices, sizeof(indices[0]));
+
 	VertexBuffer vertexBuffer(vertices, numVertices);
 	vertexBuffer.unbind();
 
@@ -71,7 +80,9 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		vertexBuffer.bind();
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
+		indexBuffer.bind();
+		glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+		indexBuffer.unbind();
 		vertexBuffer.unbind();
 
 		SDL_GL_SwapWindow(window);
