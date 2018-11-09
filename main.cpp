@@ -14,7 +14,28 @@
 
 #include "defines.h"
 #include "vertex_buffer.h"
+#include "index_buffer.h"
 #include "shader.h"
+
+void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+	std::cout << "[OpenGL Error] " << message << std::endl;
+}
+
+#ifdef _DEBUG
+
+void _GLGetError(const char* file, int line, const char* call) {
+	while(GLenum error = glGetError()) {
+		std::cout << "[OpenGL Error] " << glewGetErrorString(error) << " in " << file << ":" << line << " Call: " << call << std::endl;
+	}
+}
+
+#define GLCALL(call) call; _GLGetError(__FILE__, __LINE__, #call)
+
+#else
+
+#define GLCALL(call) call
+
+#endif
 
 int main(int argc, char** argv) {
 	SDL_Window* window;
@@ -26,6 +47,10 @@ int main(int argc, char** argv) {
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	#ifdef _DEBUG
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+	#endif
 
 	uint32 flags = SDL_WINDOW_OPENGL;
 
@@ -40,6 +65,12 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
+	#ifdef _DEBUG
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(openGLDebugCallback, 0);
+	#endif
+
 	Vertex vertices[] = {
 		Vertex{-0.5f, -0.5f, 0.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
@@ -51,6 +82,14 @@ int main(int argc, char** argv) {
 		1.0f, 0.0f, 0.0f, 1.0f},
 	};
 	uint32 numVertices = 4;
+
+	uint32 indices[] = {
+		0, 1, 2,
+		1, 2, 3
+	};
+	uint32 numIndices = 6;
+
+	IndexBuffer indexBuffer(indices, numIndices, sizeof(indices[0]));
 
 	VertexBuffer vertexBuffer(vertices, numVertices);
 	vertexBuffer.unbind();
@@ -71,7 +110,9 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		vertexBuffer.bind();
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, numVertices);
+		indexBuffer.bind();
+		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
+		indexBuffer.unbind();
 		vertexBuffer.unbind();
 
 		SDL_GL_SwapWindow(window);
