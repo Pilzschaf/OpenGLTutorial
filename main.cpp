@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
@@ -101,13 +102,24 @@ int main(int argc, char** argv) {
 	uint64 lastCounter = SDL_GetPerformanceCounter();
 	float32 delta = 0.0f;
 
+	int colorUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_color"));
+	if(!colorUniformLocation != -1) {
+		GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
+	}
+
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	float time = 0.0f;
 	bool close = false;
 	while(!close) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		time += delta;
+
+		if(!colorUniformLocation != -1) {
+			GLCALL(glUniform4f(colorUniformLocation, sinf(time)*sinf(time), 0.0f, 1.0f, 1.0f));
+		}
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
