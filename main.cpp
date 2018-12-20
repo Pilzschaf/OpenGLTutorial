@@ -4,6 +4,9 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "libs/stb_image.h"
+
 #ifdef _WIN32
 #include <SDL.h>
 #pragma comment(lib, "SDL2.lib")
@@ -95,6 +98,28 @@ int main(int argc, char** argv) {
 	VertexBuffer vertexBuffer(vertices, numVertices);
 	vertexBuffer.unbind();
 
+	int32 textureWidth = 0;
+	int32 textureHeight = 0;
+	int32 bitsPerPixel = 0;
+	stbi_set_flip_vertically_on_load(true);
+	auto textureBuffer = stbi_load("graphics/logo.png", &textureWidth, &textureHeight, &bitsPerPixel, 4);
+
+	GLuint textureId;
+	GLCALL(glGenTextures(1, &textureId));
+	GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
+
+	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+	GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureBuffer));
+	GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
+
+	if(textureBuffer) {
+		stbi_image_free(textureBuffer);
+	}
+
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 
@@ -142,6 +167,8 @@ int main(int argc, char** argv) {
 		uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
 		lastCounter = endCounter;
 	}
+
+	GLCALL(glDeleteTextures(1, &textureId));
 
 	return 0;
 }
