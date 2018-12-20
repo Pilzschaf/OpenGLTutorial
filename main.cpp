@@ -77,12 +77,16 @@ int main(int argc, char** argv) {
 
 	Vertex vertices[] = {
 		Vertex{-0.5f, -0.5f, 0.0f,
+		0.0f, 0.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
 		Vertex{-0.5f, 0.5f, 0.0f,
+		0.0f, 1.0f,
 		0.0, 1.0f, 0.0f, 1.0f},
 		Vertex{0.5f, -0.5f, 0.0f,
+		1.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 1.0f},
 		Vertex{0.5f, 0.5f, 0.0f,
+		1.0f, 1.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
 	};
 	uint32 numVertices = 4;
@@ -132,6 +136,11 @@ int main(int argc, char** argv) {
 		GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
 	}
 
+	int textureUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_texture"));
+	if(!textureUniformLocation != -1) {
+		GLCALL(glUniform1i(textureUniformLocation, 0));
+	}
+
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -148,6 +157,8 @@ int main(int argc, char** argv) {
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
+		GLCALL(glActiveTexture(GL_TEXTURE0));
+		GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
 		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
 		indexBuffer.unbind();
 		vertexBuffer.unbind();
