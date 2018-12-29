@@ -4,8 +4,8 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "libs/stb_image.h"
+#include "libs/glm/glm.hpp"
+#include "libs/glm/ext/matrix_transform.hpp"
 
 #ifdef _WIN32
 #include <SDL.h>
@@ -77,52 +77,23 @@ int main(int argc, char** argv) {
 
 	Vertex vertices[] = {
 		Vertex{-0.5f, -0.5f, 0.0f,
-		0.0f, 0.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
-		Vertex{-0.5f, 0.5f, 0.0f,
-		0.0f, 1.0f,
-		0.0, 1.0f, 0.0f, 1.0f},
 		Vertex{0.5f, -0.5f, 0.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 1.0f},
-		Vertex{0.5f, 0.5f, 0.0f,
-		1.0f, 1.0f,
-		1.0f, 0.0f, 0.0f, 1.0f},
+		0.0, 1.0f, 0.0f, 1.0f},
+		Vertex{0.0f, 0.5f, 0.0f,
+		0.0f, 0.0f, 1.0f, 1.0f}
 	};
-	uint32 numVertices = 4;
+	uint32 numVertices = 3;
 
 	uint32 indices[] = {
-		0, 1, 2,
-		1, 2, 3
+		0, 1, 2
 	};
-	uint32 numIndices = 6;
+	uint32 numIndices = 3;
 
 	IndexBuffer indexBuffer(indices, numIndices, sizeof(indices[0]));
 
 	VertexBuffer vertexBuffer(vertices, numVertices);
 	vertexBuffer.unbind();
-
-	int32 textureWidth = 0;
-	int32 textureHeight = 0;
-	int32 bitsPerPixel = 0;
-	stbi_set_flip_vertically_on_load(true);
-	auto textureBuffer = stbi_load("graphics/logo.png", &textureWidth, &textureHeight, &bitsPerPixel, 4);
-
-	GLuint textureId;
-	GLCALL(glGenTextures(1, &textureId));
-	GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
-
-	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-	GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-
-	GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureBuffer));
-	GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
-
-	if(textureBuffer) {
-		stbi_image_free(textureBuffer);
-	}
 
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
@@ -131,15 +102,10 @@ int main(int argc, char** argv) {
 	uint64 lastCounter = SDL_GetPerformanceCounter();
 	float32 delta = 0.0f;
 
-	int colorUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_color"));
-	if(!colorUniformLocation != -1) {
-		GLCALL(glUniform4f(colorUniformLocation, 1.0f, 0.0f, 1.0f, 1.0f));
-	}
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::scale(model, glm::vec3(1.2f));
 
-	int textureUniformLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_texture"));
-	if(!textureUniformLocation != -1) {
-		GLCALL(glUniform1i(textureUniformLocation, 0));
-	}
+	int modelMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_model"));
 
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -151,14 +117,13 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		time += delta;
 
-		if(!colorUniformLocation != -1) {
-			GLCALL(glUniform4f(colorUniformLocation, sinf(time)*sinf(time), 0.0f, 1.0f, 1.0f));
-		}
+		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
+		//model = glm::mat4(1.0f);
+		//model = glm::scale(model, glm::vec3(sinf(time), 1, 1));
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
-		GLCALL(glActiveTexture(GL_TEXTURE0));
-		GLCALL(glBindTexture(GL_TEXTURE_2D, textureId));
+		GLCALL(glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, &model[0][0]));
 		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
 		indexBuffer.unbind();
 		vertexBuffer.unbind();
@@ -178,8 +143,6 @@ int main(int argc, char** argv) {
 		uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
 		lastCounter = endCounter;
 	}
-
-	GLCALL(glDeleteTextures(1, &textureId));
 
 	return 0;
 }
