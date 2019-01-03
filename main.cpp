@@ -6,6 +6,7 @@
 
 #include "libs/glm/glm.hpp"
 #include "libs/glm/ext/matrix_transform.hpp"
+#include "libs/glm/gtc/matrix_transform.hpp"
 
 #ifdef _WIN32
 #include <SDL.h>
@@ -76,11 +77,11 @@ int main(int argc, char** argv) {
 	#endif
 
 	Vertex vertices[] = {
-		Vertex{-0.5f, -0.5f, 0.0f,
+		Vertex{-0.5f, -0.5f, -0.0f,
 		1.0f, 0.0f, 0.0f, 1.0f},
-		Vertex{0.5f, -0.5f, 0.0f,
+		Vertex{0.5f, -0.5f, -0.0f,
 		0.0, 1.0f, 0.0f, 1.0f},
-		Vertex{0.0f, 0.5f, 0.0f,
+		Vertex{0.0f, 0.5f, -0.0f,
 		0.0f, 0.0f, 1.0f, 1.0f}
 	};
 	uint32 numVertices = 3;
@@ -105,7 +106,14 @@ int main(int argc, char** argv) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, glm::vec3(1.2f));
 
-	int modelMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_model"));
+	glm::mat4 projection = glm::ortho(-4.0f, 4.0f, -3.0f, 3.0f, -10.0f, 100.0f);
+	projection = glm::perspective(glm::radians(45.0f), 4.0f/3.0f, 0.1f, 100.0f);
+
+	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
+
+	glm::mat4 modelViewProj = projection * view * model;
+
+	int modelViewProjMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
 
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -118,12 +126,11 @@ int main(int argc, char** argv) {
 		time += delta;
 
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
-		//model = glm::mat4(1.0f);
-		//model = glm::scale(model, glm::vec3(sinf(time), 1, 1));
+		modelViewProj = projection * view * model;
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
-		GLCALL(glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, &model[0][0]));
+		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
 		indexBuffer.unbind();
 		vertexBuffer.unbind();
