@@ -21,6 +21,7 @@
 #include "vertex_buffer.h"
 #include "index_buffer.h"
 #include "shader.h"
+#include "camera.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
 	std::cout << "[OpenGL Error] " << message << std::endl;
@@ -106,27 +107,80 @@ int main(int argc, char** argv) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, glm::vec3(1.2f));
 
-	glm::mat4 projection = glm::ortho(-4.0f, 4.0f, -3.0f, 3.0f, -10.0f, 100.0f);
-	projection = glm::perspective(glm::radians(45.0f), 4.0f/3.0f, 0.1f, 100.0f);
+	Camera camera(90.0f, 800.0f, 600.0f);
+	camera.translate(glm::vec3(0.0f, 0.0f, 5.0f));
+	camera.update();
 
-	glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
-
-	glm::mat4 modelViewProj = projection * view * model;
+	glm::mat4 modelViewProj = camera.getViewProj() * model;
 
 	int modelViewProjMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
 
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	bool buttonW = false;
+	bool buttonS = false;
+	bool buttonA = false;
+	bool buttonD = false;
+
 	float time = 0.0f;
 	bool close = false;
 	while(!close) {
+		SDL_Event event;
+		while(SDL_PollEvent(&event)) {
+			if(event.type == SDL_QUIT) {
+				close = true;
+			} else if(event.type == SDL_KEYDOWN) {
+				switch(event.key.keysym.sym) {
+					case SDLK_w:
+					buttonW = true;
+					break;
+					case SDLK_s:
+					buttonS = true;
+					break;
+					case SDLK_a:
+					buttonA = true;
+					break;
+					case SDLK_d:
+					buttonD = true;
+					break;
+				}
+			} else if(event.type == SDL_KEYUP) {
+				switch(event.key.keysym.sym)  {
+					case SDLK_w:
+					buttonW = false;
+					break;
+					case SDLK_s:
+					buttonS = false;
+					break;
+					case SDLK_a:
+					buttonA = false;
+					break;
+					case SDLK_d:
+					buttonD = false;
+					break;
+				}
+			}
+		}
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		time += delta;
 
+		if(buttonW) {
+			camera.translate(glm::vec3(0.0f, 0.0f, -2.0f * delta));
+		}
+		if(buttonS) {
+			camera.translate(glm::vec3(0.0f, 0.0f, 2.0f * delta));
+		}if(buttonA) {
+			camera.translate(glm::vec3(-2.0f * delta, 0.0f, 0.0f));
+		}if(buttonD) {
+			camera.translate(glm::vec3(2.0f * delta, 0.0f, 0.0f));
+		}
+
+		camera.update();
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
-		modelViewProj = projection * view * model;
+		modelViewProj = camera.getViewProj() * model;
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
@@ -136,13 +190,6 @@ int main(int argc, char** argv) {
 		vertexBuffer.unbind();
 
 		SDL_GL_SwapWindow(window);
-		
-		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) {
-				close = true;
-			}
-		}
 
 		uint64 endCounter = SDL_GetPerformanceCounter();
 		uint64 counterElapsed = endCounter - lastCounter;
