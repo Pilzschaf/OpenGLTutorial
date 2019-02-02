@@ -21,7 +21,7 @@
 #include "vertex_buffer.h"
 #include "index_buffer.h"
 #include "shader.h"
-#include "camera.h"
+#include "floating_camera.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
 	std::cout << "[OpenGL Error] " << message << std::endl;
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::scale(model, glm::vec3(1.2f));
 
-	Camera camera(90.0f, 800.0f, 600.0f);
+	FloatingCamera camera(90.0f, 800.0f, 600.0f);
 	camera.translate(glm::vec3(0.0f, 0.0f, 5.0f));
 	camera.update();
 
@@ -122,9 +122,13 @@ int main(int argc, char** argv) {
 	bool buttonS = false;
 	bool buttonA = false;
 	bool buttonD = false;
+	bool buttonSpace = false;
+	bool buttonShift = false;
 
+	float cameraSpeed = 6.0f;
 	float time = 0.0f;
 	bool close = false;
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	while(!close) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
@@ -144,6 +148,12 @@ int main(int argc, char** argv) {
 					case SDLK_d:
 					buttonD = true;
 					break;
+					case SDLK_SPACE:
+					buttonSpace = true;
+					break;
+					case SDLK_LSHIFT:
+					buttonShift = true;
+					break;
 				}
 			} else if(event.type == SDL_KEYUP) {
 				switch(event.key.keysym.sym)  {
@@ -159,7 +169,15 @@ int main(int argc, char** argv) {
 					case SDLK_d:
 					buttonD = false;
 					break;
+					case SDLK_SPACE:
+					buttonSpace = false;
+					break;
+					case SDLK_LSHIFT:
+					buttonShift = false;
+					break;
 				}
+			} else if(event.type == SDL_MOUSEMOTION) {
+				camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
 			}
 		}
 
@@ -168,14 +186,18 @@ int main(int argc, char** argv) {
 		time += delta;
 
 		if(buttonW) {
-			camera.translate(glm::vec3(0.0f, 0.0f, -2.0f * delta));
+			camera.moveFront(delta * cameraSpeed);
 		}
 		if(buttonS) {
-			camera.translate(glm::vec3(0.0f, 0.0f, 2.0f * delta));
+			camera.moveFront(-delta * cameraSpeed);
 		}if(buttonA) {
-			camera.translate(glm::vec3(-2.0f * delta, 0.0f, 0.0f));
+			camera.moveSideways(-delta * cameraSpeed);
 		}if(buttonD) {
-			camera.translate(glm::vec3(2.0f * delta, 0.0f, 0.0f));
+			camera.moveSideways(delta * cameraSpeed);
+		}if(buttonSpace) {
+			camera.moveUp(delta * cameraSpeed);
+		}if(buttonShift) {
+			camera.moveUp(-delta * cameraSpeed);
 		}
 
 		camera.update();
