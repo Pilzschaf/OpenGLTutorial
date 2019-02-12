@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath>
+#include <vector>
+#include <fstream>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
@@ -77,24 +79,40 @@ int main(int argc, char** argv) {
 	glDebugMessageCallback(openGLDebugCallback, 0);
 	#endif
 
-	Vertex vertices[] = {
-		Vertex{-0.5f, -0.5f, -0.0f,
-		1.0f, 0.0f, 0.0f, 1.0f},
-		Vertex{0.5f, -0.5f, -0.0f,
-		0.0, 1.0f, 0.0f, 1.0f},
-		Vertex{0.0f, 0.5f, -0.0f,
-		0.0f, 0.0f, 1.0f, 1.0f}
-	};
-	uint32 numVertices = 3;
+	std::vector<Vertex> vertices;
+	uint64 numVertices = 0;
+	
+	std::vector<uint32> indices;
+	uint64 numIndices = 0;
 
-	uint32 indices[] = {
-		0, 1, 2
-	};
-	uint32 numIndices = 3;
+	std::ifstream input = std::ifstream("models/monkey.bmf", std::ios::in | std::ios::binary);
+	if(!input.is_open()) {
+		std::cout << "Error reading model file" << std::endl;
+		return 1;
+	}
+	input.read((char*)&numVertices, sizeof(uint64));
+	input.read((char*)&numIndices, sizeof(uint64));
 
-	IndexBuffer indexBuffer(indices, numIndices, sizeof(indices[0]));
+	for(uint64 i = 0; i < numVertices; i++) {
+		Vertex vertex;
+		input.read((char*)&vertex.x, sizeof(float));
+		input.read((char*)&vertex.y, sizeof(float));
+		input.read((char*)&vertex.z, sizeof(float));
+		vertex.r = 1.0f;
+		vertex.g = 1.0f;
+		vertex.b = 1.0f;
+		vertex.a = 1.0f;
+		vertices.push_back(vertex);
+	}
+	for(uint64 i = 0; i < numIndices; i++) {
+		uint32 index;
+		input.read((char*)&index, sizeof(uint32));
+		indices.push_back(index);
+	}
 
-	VertexBuffer vertexBuffer(vertices, numVertices);
+	IndexBuffer indexBuffer(indices.data(), numIndices, sizeof(indices[0]));
+
+	VertexBuffer vertexBuffer(vertices.data(), numVertices);
 	vertexBuffer.unbind();
 
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
