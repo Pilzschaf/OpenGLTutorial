@@ -147,6 +147,8 @@ int main(int argc, char** argv) {
 	float time = 0.0f;
 	bool close = false;
 	SDL_SetRelativeMouseMode(SDL_TRUE);
+	GLCALL(glEnable(GL_CULL_FACE));
+	GLCALL(glEnable(GL_DEPTH_TEST));
 	while(!close) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
@@ -172,6 +174,9 @@ int main(int argc, char** argv) {
 					case SDLK_LSHIFT:
 					buttonShift = true;
 					break;
+					case SDLK_ESCAPE:
+					SDL_SetRelativeMouseMode(SDL_FALSE);
+					break;
 				}
 			} else if(event.type == SDL_KEYUP) {
 				switch(event.key.keysym.sym)  {
@@ -195,12 +200,18 @@ int main(int argc, char** argv) {
 					break;
 				}
 			} else if(event.type == SDL_MOUSEMOTION) {
-				camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
+				if(SDL_GetRelativeMouseMode()) {
+					camera.onMouseMoved(event.motion.xrel, event.motion.yrel);
+				}
+			} else if(event.type == SDL_MOUSEBUTTONDOWN) {
+				if(event.button.button == SDL_BUTTON_LEFT) {
+					SDL_SetRelativeMouseMode(SDL_TRUE);
+				}
 			}
 		}
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		time += delta;
 
 		if(buttonW) {
