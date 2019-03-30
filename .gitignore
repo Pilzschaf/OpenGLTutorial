@@ -35,3 +35,6 @@ tools/modelexporter
 
 # Dolphin
 .directory
+
+# VSCode
+.vscode/ipch

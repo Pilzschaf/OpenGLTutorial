@@ -95,13 +95,12 @@ int main(int argc, char** argv) {
 
 	for(uint64 i = 0; i < numVertices; i++) {
 		Vertex vertex;
-		input.read((char*)&vertex.x, sizeof(float));
-		input.read((char*)&vertex.y, sizeof(float));
-		input.read((char*)&vertex.z, sizeof(float));
-		vertex.r = 1.0f;
-		vertex.g = 1.0f;
-		vertex.b = 1.0f;
-		vertex.a = 1.0f;
+		input.read((char*)&vertex.position.x, sizeof(float));
+		input.read((char*)&vertex.position.y, sizeof(float));
+		input.read((char*)&vertex.position.z, sizeof(float));
+		input.read((char*)&vertex.normal.x, sizeof(float));
+		input.read((char*)&vertex.normal.y, sizeof(float));
+		input.read((char*)&vertex.normal.z, sizeof(float));
 		vertices.push_back(vertex);
 	}
 	for(uint64 i = 0; i < numIndices; i++) {
