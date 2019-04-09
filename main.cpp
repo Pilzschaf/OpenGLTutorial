@@ -131,6 +131,8 @@ int main(int argc, char** argv) {
 	glm::mat4 modelViewProj = camera.getViewProj() * model;
 
 	int modelViewProjMatrixLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelViewProj"));
+	int modelViewLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_modelView"));
+	int invModelViewLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_invModelView"));
 
 	// Wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -231,10 +233,14 @@ int main(int argc, char** argv) {
 		camera.update();
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
+		glm::mat4 modelView = camera.getView() * model;
+		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
 
 		vertexBuffer.bind();
 		indexBuffer.bind();
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
+		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
+		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
 		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
 		indexBuffer.unbind();
 		vertexBuffer.unbind();
