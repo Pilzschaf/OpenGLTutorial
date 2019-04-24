@@ -19,16 +19,6 @@
 #include <SDL2/SDL.h>
 #endif
 
-#include "defines.h"
-#include "vertex_buffer.h"
-#include "index_buffer.h"
-#include "shader.h"
-#include "floating_camera.h"
-
-void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
-	std::cout << "[OpenGL Error] " << message << std::endl;
-}
-
 #ifdef _DEBUG
 
 void _GLGetError(const char* file, int line, const char* call) {
@@ -44,6 +34,17 @@ void _GLGetError(const char* file, int line, const char* call) {
 #define GLCALL(call) call
 
 #endif
+
+#include "defines.h"
+#include "vertex_buffer.h"
+#include "index_buffer.h"
+#include "shader.h"
+#include "floating_camera.h"
+#include "mesh.h"
+
+void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+	std::cout << "[OpenGL Error] " << message << std::endl;
+}
 
 int main(int argc, char** argv) {
 	SDL_Window* window;
@@ -79,43 +80,13 @@ int main(int argc, char** argv) {
 	glDebugMessageCallback(openGLDebugCallback, 0);
 	#endif
 
-	std::vector<Vertex> vertices;
-	uint64 numVertices = 0;
-	
-	std::vector<uint32> indices;
-	uint64 numIndices = 0;
-
-	std::ifstream input = std::ifstream("models/monkey.bmf", std::ios::in | std::ios::binary);
-	if(!input.is_open()) {
-		std::cout << "Error reading model file" << std::endl;
-		return 1;
-	}
-	input.read((char*)&numVertices, sizeof(uint64));
-	input.read((char*)&numIndices, sizeof(uint64));
-
-	for(uint64 i = 0; i < numVertices; i++) {
-		Vertex vertex;
-		input.read((char*)&vertex.position.x, sizeof(float));
-		input.read((char*)&vertex.position.y, sizeof(float));
-		input.read((char*)&vertex.position.z, sizeof(float));
-		input.read((char*)&vertex.normal.x, sizeof(float));
-		input.read((char*)&vertex.normal.y, sizeof(float));
-		input.read((char*)&vertex.normal.z, sizeof(float));
-		vertices.push_back(vertex);
-	}
-	for(uint64 i = 0; i < numIndices; i++) {
-		uint32 index;
-		input.read((char*)&index, sizeof(uint32));
-		indices.push_back(index);
-	}
-
-	IndexBuffer indexBuffer(indices.data(), numIndices, sizeof(indices[0]));
-
-	VertexBuffer vertexBuffer(vertices.data(), numVertices);
-	vertexBuffer.unbind();
-
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
+	Material material = {};
+	material.diffuse = {0.4f, 0.2f, 0.1f};
+	//material.specular = material.diffuse;
+	//material.shininess = 4.0f;
+	Mesh mesh("models/monkey.bmf", material, &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
 	uint64 lastCounter = SDL_GetPerformanceCounter();
@@ -236,14 +207,10 @@ int main(int argc, char** argv) {
 		glm::mat4 modelView = camera.getView() * model;
 		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
 
-		vertexBuffer.bind();
-		indexBuffer.bind();
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
-		GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
-		indexBuffer.unbind();
-		vertexBuffer.unbind();
+		mesh.render();
 
 		SDL_GL_SwapWindow(window);
 
