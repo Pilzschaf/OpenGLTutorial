@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
 	shader.bind();
 	Material material = {};
 	material.diffuse = {0.4f, 0.2f, 0.1f};
-	material.specular = material.diffuse;
-	material.shininess = 4.0f;
+	//material.specular = material.diffuse;
+	//material.shininess = 4.0f;
 	Mesh mesh("models/monkey.bmf", material, &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();

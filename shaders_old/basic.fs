@@ -17,7 +17,7 @@ void main()
 
     vec3 ambient = u_diffuse * 0.2;
     vec3 diffuse = max(dot(normal, light), 0.0) * u_diffuse;
-    vec3 specular = pow(max(dot(reflection, view), 0.0), u_shininess) * u_specular;
+    vec3 specular = pow(max(dot(reflection, view), 0.000001), u_shininess) * u_specular;
 
     gl_FragColor = vec4(ambient + diffuse + specular + u_emissive, 1.0f);
 }
