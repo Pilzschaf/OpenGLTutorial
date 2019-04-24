@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 	glDebugMessageCallback(openGLDebugCallback, 0);
 	#endif
 
-	Shader shader("shaders_old/basic.vs", "shaders_old/basic.fs");
+	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 	Material material = {};
 	material.diffuse = {0.4f, 0.2f, 0.1f};
