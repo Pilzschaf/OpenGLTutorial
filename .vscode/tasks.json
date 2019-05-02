@@ -14,6 +14,18 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "build_tools",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g", "-std=c++11", "tools/modelexporter.cpp", "-o", "tools/modelexporter", "-D", "_DEBUG", "-lassimp"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

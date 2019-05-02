@@ -23,6 +23,26 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "(gdb) Launch exporter",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/tools/modelexporter",
+            "args": ["monkey.obj"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/models",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "preLaunchTask": "build_tools",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }
