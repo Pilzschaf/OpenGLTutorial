@@ -82,18 +82,16 @@ int main(int argc, char** argv) {
 
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
-	Material material = {};
-	material.diffuse = {0.4f, 0.2f, 0.1f};
-	//material.specular = material.diffuse;
-	//material.shininess = 4.0f;
-	Mesh mesh("models/monkey.bmf", material, &shader);
+	
+	Model monkey;
+	monkey.init("models/tree.bmf", &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
 	uint64 lastCounter = SDL_GetPerformanceCounter();
 	float32 delta = 0.0f;
 
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::scale(model, glm::vec3(1.2f));
+	model = glm::scale(model, glm::vec3(0.1f));
 
 	FloatingCamera camera(90.0f, 800.0f, 600.0f);
 	camera.translate(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -210,7 +208,7 @@ int main(int argc, char** argv) {
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
-		mesh.render();
+		monkey.render();
 
 		SDL_GL_SwapWindow(window);
 

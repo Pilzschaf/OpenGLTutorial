@@ -16,35 +16,10 @@ struct Material {
 
 class Mesh {
 public:
-    Mesh(const char* filename, Material material, Shader* shader) {
+    Mesh(std::vector<Vertex>& vertices, uint64 numVertices, std::vector<uint32>& indices, uint64 numIndices, Material material, Shader* shader) {
         this->material = material;
         this->shader = shader;
-
-        std::vector<Vertex> vertices;
-        uint64 numVertices = 0;
-        
-        std::vector<uint32> indices;
-        numIndices = 0;
-
-        std::ifstream input = std::ifstream(filename, std::ios::in | std::ios::binary);
-        input.read((char*)&numVertices, sizeof(uint64));
-        input.read((char*)&numIndices, sizeof(uint64));
-
-        for(uint64 i = 0; i < numVertices; i++) {
-            Vertex vertex;
-            input.read((char*)&vertex.position.x, sizeof(float));
-            input.read((char*)&vertex.position.y, sizeof(float));
-            input.read((char*)&vertex.position.z, sizeof(float));
-            input.read((char*)&vertex.normal.x, sizeof(float));
-            input.read((char*)&vertex.normal.y, sizeof(float));
-            input.read((char*)&vertex.normal.z, sizeof(float));
-            vertices.push_back(vertex);
-        }
-        for(uint64 i = 0; i < numIndices; i++) {
-            uint32 index;
-            input.read((char*)&index, sizeof(uint32));
-            indices.push_back(index);
-        }
+        this->numIndices = numIndices;
 
         vertexBuffer = new VertexBuffer(vertices.data(), numVertices);
         indexBuffer = new IndexBuffer(indices.data(), numIndices, sizeof(indices[0]));
@@ -77,4 +52,63 @@ private:
     int specularLocation;
     int emissiveLocation;
     int shininessLocation;
+};
+
+class Model {
+public:
+    void init(const char* filename, Shader* shader) {
+        uint64 numMeshes = 0;
+        std::ifstream input = std::ifstream(filename, std::ios::in | std::ios::binary);
+        if(!input.is_open()) {
+            std::cout << "File not found" << std::endl;
+            return;
+        }
+
+        input.read((char*)&numMeshes, sizeof(uint64));
+        
+        for(uint64 i = 0; i < numMeshes; i++) {
+            Material material;
+            std::vector<Vertex> vertices;
+            uint64 numVertices = 0;
+            std::vector<uint32> indices;
+            uint64 numIndices = 0;
+
+            input.read((char*)&material, sizeof(Material));
+            input.read((char*)&numVertices, sizeof(uint64));
+            input.read((char*)&numIndices, sizeof(uint64));
+
+            for(uint64 i = 0; i < numVertices; i++) {
+                Vertex vertex;
+                input.read((char*)&vertex.position.x, sizeof(float));
+                input.read((char*)&vertex.position.y, sizeof(float));
+                input.read((char*)&vertex.position.z, sizeof(float));
+                input.read((char*)&vertex.normal.x, sizeof(float));
+                input.read((char*)&vertex.normal.y, sizeof(float));
+                input.read((char*)&vertex.normal.z, sizeof(float));
+                vertices.push_back(vertex);
+            }
+            for(uint64 i = 0; i < numIndices; i++) {
+                uint32 index;
+                input.read((char*)&index, sizeof(uint32));
+                indices.push_back(index);
+            }
+
+            Mesh* mesh = new Mesh(vertices, numVertices, indices, numIndices, material, shader);
+            meshes.push_back(mesh);
+        }
+    }
+
+    void render() {
+        for(Mesh* mesh : meshes) {
+            mesh->render();
+        }
+    }
+
+    ~Model() {
+        for(Mesh* mesh : meshes) {
+            delete mesh;
+        }
+    }
+private:
+    std::vector<Mesh*> meshes;
 };
