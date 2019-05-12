@@ -24,10 +24,10 @@ public:
         vertexBuffer = new VertexBuffer(vertices.data(), numVertices);
         indexBuffer = new IndexBuffer(indices.data(), numIndices, sizeof(indices[0]));
 
-        diffuseLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_diffuse"));
-        specularLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_specular"));
-        emissiveLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_emissive"));
-        shininessLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_shininess"));
+        diffuseLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.diffuse"));
+        specularLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.specular"));
+        emissiveLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.emissive"));
+        shininessLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.shininess"));
     }
     ~Mesh() {
         delete vertexBuffer;
