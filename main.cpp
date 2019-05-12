@@ -82,6 +82,13 @@ int main(int argc, char** argv) {
 
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
+	int directionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_directional_light.direction"));
+	glm::vec3 sunColor = glm::vec3(0.8f);
+	glm::vec3 sunDirection = glm::vec3(-1.0f);
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.diffuse"), 1, (float*)&sunColor.data));
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.specular"), 1, (float*)&sunColor.data));
+	sunColor *= 0.4f;
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.ambient"), 1, (float*)&sunColor.data));
 	
 	Model monkey;
 	monkey.init("models/tree.bmf", &shader);
@@ -204,6 +211,9 @@ int main(int argc, char** argv) {
 		modelViewProj = camera.getViewProj() * model;
 		glm::mat4 modelView = camera.getView() * model;
 		glm::mat4 invModelView = glm::transpose(glm::inverse(modelView));
+		
+		glm::vec4 transformedSunDirection = glm::transpose(glm::inverse(camera.getView())) * glm::vec4(sunDirection, 1.0f);
+		glUniform3fv(directionLocation, 1, (float*)&transformedSunDirection.data);
 
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
