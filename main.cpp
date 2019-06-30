@@ -89,6 +89,16 @@ int main(int argc, char** argv) {
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.specular"), 1, (float*)&sunColor.data));
 	sunColor *= 0.4f;
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.ambient"), 1, (float*)&sunColor.data));
+
+	glm::vec3 pointLightColor = glm::vec3(0.0f, 0.0f, 1.0f);
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.diffuse"), 1, (float*)&pointLightColor.data));
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.specular"), 1, (float*)&pointLightColor.data));
+	pointLightColor *= 0.2f;
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.ambient"), 1, (float*)&pointLightColor.data));
+	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_point_light.linear"), 0.027f));
+	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_point_light.quadratic"), 0.0028f));
+	glm::vec4 pointLightPosition = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
+	int positionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_point_light.position"));
 	
 	Model monkey;
 	monkey.init("models/tree.bmf", &shader);
@@ -214,6 +224,11 @@ int main(int argc, char** argv) {
 		
 		glm::vec4 transformedSunDirection = glm::transpose(glm::inverse(camera.getView())) * glm::vec4(sunDirection, 1.0f);
 		glUniform3fv(directionLocation, 1, (float*)&transformedSunDirection.data);
+
+		glm::mat4 pointLightMatrix = glm::rotate(glm::mat4(1.0f), -delta, {0.0f, 1.0f, 0.0f});
+		pointLightPosition = pointLightMatrix * pointLightPosition;
+		glm::vec3 transformedPointLightPosition = (glm::vec3) (camera.getView() * pointLightPosition);
+		glUniform3fv(positionLocation, 1, (float*)&transformedPointLightPosition.data);
 
 		GLCALL(glUniformMatrix4fv(modelViewProjMatrixLocation, 1, GL_FALSE, &modelViewProj[0][0]));
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
