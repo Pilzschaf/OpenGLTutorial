@@ -29,9 +29,23 @@ struct PointLight {
     float quadratic;
 };
 
+struct SpotLight {
+    vec3 position;
+    // Must be a normalized vector
+    vec3 direction;
+
+    float innerCone;
+    float outerCone;
+
+    vec3 diffuse;
+    vec3 specular;
+    vec3 ambient;
+};
+
 uniform Material u_material;
 uniform DirectionalLight u_directional_light;
 uniform PointLight u_point_light;
+uniform SpotLight u_spot_light;
 
 void main()
 {
@@ -52,6 +66,19 @@ void main()
     ambient += attentuation * u_point_light.ambient * u_material.diffuse;
     diffuse += attentuation * u_point_light.diffuse * max(dot(normal, light), 0.0) * u_material.diffuse;
     specular += attentuation * u_point_light.specular * pow(max(dot(reflection, view), 0.000001), u_material.shininess) * u_material.specular;
+
+    light = normalize(u_spot_light.position - v_position);
+    reflection = reflect(-light, normal);
+    float theta = dot(light, u_spot_light.direction);
+    float epsilon = u_spot_light.innerCone - u_spot_light.outerCone;
+    float intensity = clamp((theta - u_spot_light.outerCone) / epsilon, 0.0f, 1.0f);
+    if(theta > u_spot_light.outerCone) {
+        ambient += u_spot_light.ambient * u_material.diffuse;
+        diffuse += intensity * u_spot_light.diffuse * max(dot(normal, light), 0.0) * u_material.diffuse;
+        specular += intensity * u_spot_light.specular * pow(max(dot(reflection, view), 0.000001), u_material.shininess) * u_material.specular;
+    } else {
+        ambient += u_spot_light.ambient * u_material.diffuse;
+    }
 
     gl_FragColor = vec4(ambient + diffuse + specular + u_material.emissive, 1.0f);
 }
