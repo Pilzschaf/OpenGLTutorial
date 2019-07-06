@@ -83,14 +83,14 @@ int main(int argc, char** argv) {
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 	int directionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_directional_light.direction"));
-	glm::vec3 sunColor = glm::vec3(0.8f);
+	glm::vec3 sunColor = glm::vec3(0.0f);
 	glm::vec3 sunDirection = glm::vec3(-1.0f);
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.diffuse"), 1, (float*)&sunColor.data));
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.specular"), 1, (float*)&sunColor.data));
 	sunColor *= 0.4f;
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_directional_light.ambient"), 1, (float*)&sunColor.data));
 
-	glm::vec3 pointLightColor = glm::vec3(0.0f, 0.0f, 1.0f);
+	glm::vec3 pointLightColor = glm::vec3(0.0f, 0.0f, 0.0f);
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.diffuse"), 1, (float*)&pointLightColor.data));
 	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_point_light.specular"), 1, (float*)&pointLightColor.data));
 	pointLightColor *= 0.2f;
@@ -99,6 +99,18 @@ int main(int argc, char** argv) {
 	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_point_light.quadratic"), 0.0028f));
 	glm::vec4 pointLightPosition = glm::vec4(0.0f, 0.0f, 10.0f, 1.0f);
 	int positionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_point_light.position"));
+
+	glm::vec3 spotLightColor = glm::vec3(1.0f);
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.diffuse"), 1, (float*)&spotLightColor.data));
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.specular"), 1, (float*)&spotLightColor.data));
+	spotLightColor *= 0.2f;
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.ambient"), 1, (float*)&spotLightColor.data));
+	glm::vec3 spotLightPosition = glm::vec3(0.0f);
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.position"), 1, (float*)&spotLightPosition.data));
+	spotLightPosition.z = 1.0f;
+	GLCALL(glUniform3fv(glGetUniformLocation(shader.getShaderId(), "u_spot_light.direction"), 1, (float*)&spotLightPosition.data));
+	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.innerCone"), 0.95f));
+	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.outerCone"), 0.80f));
 	
 	Model monkey;
 	monkey.init("models/tree.bmf", &shader);
