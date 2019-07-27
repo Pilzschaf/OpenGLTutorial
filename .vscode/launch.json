@@ -29,7 +29,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/tools/modelexporter",
-            "args": ["monkey.obj"],
+            "args": ["fern.FBX"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/models",
             "environment": [],

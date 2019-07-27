@@ -11,7 +11,20 @@ struct Position {
     float x, y, z;
 };
 
+struct Position2D {
+    float x, y;
+};
+
 struct Material {
+    Position diffuse;
+    Position specular;
+    Position emissive;
+    float shininess;
+    aiString diffuseMapName;
+    aiString normalMapName;
+};
+
+struct BMFMaterial {
     Position diffuse;
     Position specular;
     Position emissive;
@@ -21,8 +34,9 @@ struct Material {
 struct Mesh {
     std::vector<Position> positions;
     std::vector<Position> normals;
+    std::vector<Position2D> uvs;
     std::vector<uint32_t> indices;
-    Material material;
+    int materialIndex;
 };
 
 std::vector<Mesh> meshes;
@@ -42,6 +56,12 @@ void processMesh(aiMesh* mesh, const aiScene* scene) {
         normal.y = mesh->mNormals[i].y;
         normal.z = mesh->mNormals[i].z;
         m.normals.push_back(normal);
+
+        Position2D uv;
+        assert(mesh->mNumUVComponents > 0);
+        uv.x = mesh->mTextureCoords[0][i].x;
+        uv.y = mesh->mTextureCoords[0][i].y;
+        m.uvs.push_back(uv);
     }
 
     for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
@@ -52,7 +72,7 @@ void processMesh(aiMesh* mesh, const aiScene* scene) {
         }
     }
 
-    m.material = materials[mesh->mMaterialIndex];
+    m.materialIndex = mesh->mMaterialIndex;
     meshes.push_back(m);
 }
 
@@ -81,7 +101,7 @@ char* getFilename(char* filename) {
 
 void processMaterials(const aiScene* scene) {
     for(uint32_t i = 0; i < scene->mNumMaterials; i++) {
-        Material mat;
+        Material mat = {};
         aiMaterial* material = scene->mMaterials[i];
 
         aiColor3D diffuse(0.0f, 0.0f, 0.0f);
@@ -116,6 +136,13 @@ void processMaterials(const aiScene* scene) {
         mat.specular.y *= shininessStrength;
         mat.specular.z *= shininessStrength;
 
+        uint32_t numDiffuseMaps = material->GetTextureCount(aiTextureType_DIFFUSE);
+        uint32_t numNormalMaps = material->GetTextureCount(aiTextureType_NORMALS);
+        assert(numDiffuseMaps > 0);
+        material->GetTexture(aiTextureType_DIFFUSE, 0, &mat.diffuseMapName);
+        assert(numNormalMaps > 0);
+        material->GetTexture(aiTextureType_NORMALS, 0, &mat.normalMapName);
+
         materials.push_back(mat);
     }
 }
@@ -145,13 +172,35 @@ int main(int argc, char** argv) {
 
     std::ofstream output(outputFilename, std::ios::out | std::ios::binary);
     std::cout << "Writing bmf file..." << std::endl;
+
+    // Materials
+    uint64_t numMaterials = materials.size();
+    output.write((char*)&numMaterials, sizeof(uint64_t));
+    for(Material material : materials) {
+        output.write((char*)&material, sizeof(BMFMaterial));
+        const char* pathPrefix = "models/";
+        // Diffuse map
+        uint64_t diffuesMapNameLength = material.diffuseMapName.length + 7;
+        output.write((char*)&diffuesMapNameLength, sizeof(uint64_t));
+        output.write(pathPrefix, 7);
+        output.write((char*)&material.diffuseMapName.data, material.diffuseMapName.length);
+
+        // Normal map
+        uint64_t normalMapNameLength = material.normalMapName.length + 7;
+        output.write((char*)&normalMapNameLength, sizeof(uint64_t));
+        output.write(pathPrefix, 7);
+        output.write((char*)&material.normalMapName.data, material.normalMapName.length);
+    }
+
+    // Meshes
     uint64_t numMeshes = meshes.size();
     output.write((char*)&numMeshes, sizeof(uint64_t));
     for(Mesh& mesh : meshes) {
         uint64_t numVertices = mesh.positions.size();
         uint64_t numIndices = mesh.indices.size();
-        output.write((char*)&mesh.material, sizeof(Material));
+        uint64_t materialIndex = mesh.materialIndex;
 
+        output.write((char*)&materialIndex, sizeof(uint64_t));
         output.write((char*)&numVertices, sizeof(uint64_t));
         output.write((char*)&numIndices, sizeof(uint64_t));
         for(uint64_t i = 0; i < numVertices; i++) {
@@ -162,6 +211,9 @@ int main(int argc, char** argv) {
             output.write((char*)&mesh.normals[i].x, sizeof(float));
             output.write((char*)&mesh.normals[i].y, sizeof(float));
             output.write((char*)&mesh.normals[i].z, sizeof(float));
+
+            output.write((char*)&mesh.uvs[i].x, sizeof(float));
+            output.write((char*)&mesh.uvs[i].y, sizeof(float));
         }
         for(uint64_t i = 0; i < numIndices; i++) {
             output.write((char*)&mesh.indices[i], sizeof(uint32_t));

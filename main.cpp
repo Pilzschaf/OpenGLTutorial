@@ -6,6 +6,10 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "libs/stb_image.h"
+#undef STB_IMAGE_IMPLEMENTATION
+
 #include "libs/glm/glm.hpp"
 #include "libs/glm/ext/matrix_transform.hpp"
 #include "libs/glm/gtc/matrix_transform.hpp"
@@ -113,7 +117,7 @@ int main(int argc, char** argv) {
 	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.outerCone"), 0.80f));
 	
 	Model monkey;
-	monkey.init("models/tree.bmf", &shader);
+	monkey.init("models/fern.bmf", &shader);
 
 	uint64 perfCounterFrequency = SDL_GetPerformanceFrequency();
 	uint64 lastCounter = SDL_GetPerformanceCounter();
