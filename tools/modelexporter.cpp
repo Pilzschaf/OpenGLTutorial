@@ -34,6 +34,7 @@ struct BMFMaterial {
 struct Mesh {
     std::vector<Position> positions;
     std::vector<Position> normals;
+    std::vector<Position> tangents;
     std::vector<Position2D> uvs;
     std::vector<uint32_t> indices;
     int materialIndex;
@@ -56,6 +57,12 @@ void processMesh(aiMesh* mesh, const aiScene* scene) {
         normal.y = mesh->mNormals[i].y;
         normal.z = mesh->mNormals[i].z;
         m.normals.push_back(normal);
+
+        Position tangent;
+        tangent.x = mesh->mTangents[i].x;
+        tangent.y = mesh->mTangents[i].y;
+        tangent.z = mesh->mTangents[i].z;
+        m.tangents.push_back(tangent);
 
         Position2D uv;
         assert(mesh->mNumUVComponents > 0);
@@ -157,7 +164,7 @@ int main(int argc, char** argv) {
     }
 
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(argv[argc-1], aiProcess_PreTransformVertices | aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality);
+    const aiScene* scene = importer.ReadFile(argv[argc-1], aiProcess_PreTransformVertices | aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_CalcTangentSpace);
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE, !scene->mRootNode) {
         std::cout << "Error while loading model with assimp: " << importer.GetErrorString() << std::endl;
         return 1;
@@ -211,6 +218,10 @@ int main(int argc, char** argv) {
             output.write((char*)&mesh.normals[i].x, sizeof(float));
             output.write((char*)&mesh.normals[i].y, sizeof(float));
             output.write((char*)&mesh.normals[i].z, sizeof(float));
+
+            output.write((char*)&mesh.tangents[i].x, sizeof(float));
+            output.write((char*)&mesh.tangents[i].y, sizeof(float));
+            output.write((char*)&mesh.tangents[i].z, sizeof(float));
 
             output.write((char*)&mesh.uvs[i].x, sizeof(float));
             output.write((char*)&mesh.uvs[i].y, sizeof(float));

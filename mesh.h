@@ -36,6 +36,7 @@ public:
         emissiveLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.emissive"));
         shininessLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_material.shininess"));
         diffuseMapLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_diffuse_map"));
+        normalMapLocation = GLCALL(glGetUniformLocation(shader->getShaderId(), "u_normal_map"));
     }
     ~Mesh() {
         delete vertexBuffer;
@@ -50,6 +51,10 @@ public:
         glUniform1f(shininessLocation, material.material.shininess);
         GLCALL(glBindTexture(GL_TEXTURE_2D, material.diffuseMap));
         GLCALL(glUniform1i(diffuseMapLocation, 0));
+        GLCALL(glActiveTexture(GL_TEXTURE1));
+        GLCALL(glBindTexture(GL_TEXTURE_2D, material.normalMap));
+        GLCALL(glActiveTexture(GL_TEXTURE0));
+        GLCALL(glUniform1i(normalMapLocation, 1));
         GLCALL(glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0));
     }
 private:
@@ -63,6 +68,7 @@ private:
     int emissiveLocation;
     int shininessLocation;
     int diffuseMapLocation;
+    int normalMapLocation;
 };
 
 class Model {
@@ -164,6 +170,9 @@ public:
                 input.read((char*)&vertex.normal.x, sizeof(float));
                 input.read((char*)&vertex.normal.y, sizeof(float));
                 input.read((char*)&vertex.normal.z, sizeof(float));
+                input.read((char*)&vertex.tangent.x, sizeof(float));
+                input.read((char*)&vertex.tangent.y, sizeof(float));
+                input.read((char*)&vertex.tangent.z, sizeof(float));
                 input.read((char*)&vertex.textureCoord.x, sizeof(float));
                 input.read((char*)&vertex.textureCoord.y, sizeof(float));
                 vertices.push_back(vertex);

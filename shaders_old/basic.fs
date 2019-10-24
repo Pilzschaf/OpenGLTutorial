@@ -1,8 +1,8 @@
 #version 120
 
-varying vec3 v_normal;
 varying vec3 v_position;
 varying vec2 v_tex_coord;
+varying mat3 v_tbn;
 
 struct Material {
     vec3 diffuse;
@@ -48,11 +48,17 @@ uniform DirectionalLight u_directional_light;
 uniform PointLight u_point_light;
 uniform SpotLight u_spot_light;
 uniform sampler2D u_diffuse_map;
+uniform sampler2D u_normal_map;
 
 void main()
 {
+    // Vector from fragment to camera (camera always at 0,0,0)
     vec3 view = normalize(-v_position);
-    vec3 normal = normalize(v_normal);
+
+    // Normal from normal map
+    vec3 normal = texture2D(u_normal_map, v_tex_coord).rgb;
+    normal = normalize(normal * 2.0 - 1.0f);
+    normal = normalize(v_tbn * normal);
     
     vec4 diffuseColor = texture2D(u_diffuse_map, v_tex_coord);
     if(diffuseColor.w < 0.9) {
