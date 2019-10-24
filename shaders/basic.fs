@@ -2,9 +2,9 @@
 
 layout(location = 0) out vec4 f_color;
 
-in vec3 v_normal;
 in vec3 v_position;
 in vec2 v_tex_coord;
+in mat3 v_tbn;
 
 struct Material {
     vec3 diffuse;
@@ -50,12 +50,17 @@ uniform DirectionalLight u_directional_light;
 uniform PointLight u_point_light;
 uniform SpotLight u_spot_light;
 uniform sampler2D u_diffuse_map;
+uniform sampler2D u_normal_map;
 
 void main()
 {
     // Vector from fragment to camera (camera always at 0,0,0)
     vec3 view = normalize(-v_position);
-    vec3 normal = normalize(v_normal);
+
+    // Normal from normal map
+    vec3 normal = texture(u_normal_map, v_tex_coord).rgb;
+    normal = normalize(normal * 2.0 - 1.0f);
+    normal = normalize(v_tbn * normal);
 
     vec4 diffuseColor = texture(u_diffuse_map, v_tex_coord);
     if(diffuseColor.w < 0.9) {
