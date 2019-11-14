@@ -45,6 +45,7 @@ void _GLGetError(const char* file, int line, const char* call) {
 #include "shader.h"
 #include "floating_camera.h"
 #include "mesh.h"
+#include "font.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
 	std::cout << "[OpenGL Error] " << message << std::endl;
@@ -84,6 +85,7 @@ int main(int argc, char** argv) {
 	glDebugMessageCallback(openGLDebugCallback, 0);
 	#endif
 
+	Shader fontShader("shaders_old/font.vs", "shaders_old/font.fs");
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
 	shader.bind();
 	int directionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_directional_light.direction"));
@@ -116,6 +118,9 @@ int main(int argc, char** argv) {
 	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.innerCone"), 0.95f));
 	GLCALL(glUniform1f(glGetUniformLocation(shader.getShaderId(), "u_spot_light.outerCone"), 0.80f));
 	
+	Font font;
+	font.initFont("fonts/OpenSans-Regular.ttf");
+
 	Model monkey;
 	monkey.init("models/fern.bmf", &shader);
 
@@ -149,9 +154,11 @@ int main(int argc, char** argv) {
 	float cameraSpeed = 6.0f;
 	float time = 0.0f;
 	bool close = false;
+	uint32 FPS = 0;
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	GLCALL(glEnable(GL_CULL_FACE));
 	GLCALL(glEnable(GL_DEPTH_TEST));
+
 	while(!close) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
@@ -233,6 +240,7 @@ int main(int argc, char** argv) {
 		}
 
 		camera.update();
+		shader.bind();
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
 		glm::mat4 modelView = camera.getView() * model;
@@ -250,13 +258,34 @@ int main(int argc, char** argv) {
 		GLCALL(glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, &modelView[0][0]));
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
 		monkey.render();
+		shader.unbind();
+
+		fontShader.bind();
+
+		int w, h;
+		SDL_GetWindowSize(window, &w, &h);
+		glm::mat4 ortho = glm::ortho(0.0f, (float)w, (float)h, 0.0f);
+		GLCALL(glUniformMatrix4fv(glGetUniformLocation(fontShader.getShaderId(), "u_modelViewProj"), 1, GL_FALSE, &ortho[0][0]));
+		GLCALL(glDisable(GL_CULL_FACE));
+		GLCALL(glEnable(GL_BLEND));
+		GLCALL(glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		GLCALL(glDisable(GL_DEPTH_TEST));
+
+		font.drawString(100.0f, 100.0f, "Ganymede", &fontShader);
+		std::string fpsString = "FPS: ";
+		fpsString.append(std::to_string(FPS));
+		font.drawString(20.0f, 20.0f, fpsString.c_str(), &fontShader);
+
+		fontShader.unbind();
+		GLCALL(glEnable(GL_CULL_FACE));
+		GLCALL(glEnable(GL_DEPTH_TEST));
 
 		SDL_GL_SwapWindow(window);
 
 		uint64 endCounter = SDL_GetPerformanceCounter();
 		uint64 counterElapsed = endCounter - lastCounter;
 		delta = ((float32)counterElapsed) / (float32)perfCounterFrequency;
-		uint32 FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
+		FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
 		lastCounter = endCounter;
 	}
 
