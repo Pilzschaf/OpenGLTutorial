@@ -46,6 +46,7 @@ void _GLGetError(const char* file, int line, const char* call) {
 #include "floating_camera.h"
 #include "mesh.h"
 #include "font.h"
+#include "framebuffer.h"
 
 void openGLDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
 	std::cout << "[OpenGL Error] " << message << std::endl;
@@ -159,6 +160,11 @@ int main(int argc, char** argv) {
 	GLCALL(glEnable(GL_CULL_FACE));
 	GLCALL(glEnable(GL_DEPTH_TEST));
 
+	Framebuffer framebuffer;
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
+	framebuffer.create(w, h);
+
 	while(!close) {
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
@@ -240,6 +246,8 @@ int main(int argc, char** argv) {
 		}
 
 		camera.update();
+
+		framebuffer.bind();
 		shader.bind();
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
@@ -259,6 +267,7 @@ int main(int argc, char** argv) {
 		GLCALL(glUniformMatrix4fv(invModelViewLocation, 1, GL_FALSE, &invModelView[0][0]));
 		monkey.render();
 		shader.unbind();
+		framebuffer.unbind();
 
 		fontShader.bind();
 
@@ -288,6 +297,8 @@ int main(int argc, char** argv) {
 		FPS = (uint32)((float32)perfCounterFrequency / (float32)counterElapsed);
 		lastCounter = endCounter;
 	}
+
+	framebuffer.destroy();
 
 	return 0;
 }

@@ -2,11 +2,10 @@
 
 #include "defines.h"
 
-struct FrameBuffer {
+struct Framebuffer {
     void create(uint32 width, uint32 height) {
         glGenFramebuffers(1, &fbo);
 
-        unsigned int textures[2];
         glGenTextures(2, textures);
 
         glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -40,4 +39,5 @@ struct FrameBuffer {
 
 private:
     GLuint fbo;
+    GLuint textures[2];
 };
