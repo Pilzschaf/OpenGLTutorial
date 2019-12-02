@@ -27,6 +27,8 @@ struct Framebuffer {
 
     void destroy() {
         glDeleteFramebuffers(1, &fbo);
+        // This line was missing in the original implementation in the framebuffer video
+        glDeleteTextures(2, textures);
     }
 
     void bind() {
