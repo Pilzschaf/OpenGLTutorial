@@ -88,6 +88,7 @@ int main(int argc, char** argv) {
 
 	Shader fontShader("shaders_old/font.vs", "shaders_old/font.fs");
 	Shader shader("shaders/basic.vs", "shaders/basic.fs");
+	Shader postprocessingShader("shaders_old/postprocess.vs", "shaders_old/postprocess.fs");
 	shader.bind();
 	int directionLocation = GLCALL(glGetUniformLocation(shader.getShaderId(), "u_directional_light.direction"));
 	glm::vec3 sunColor = glm::vec3(0.0f);
@@ -248,6 +249,7 @@ int main(int argc, char** argv) {
 		camera.update();
 
 		framebuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shader.bind();
 		model = glm::rotate(model, 1.0f*delta, glm::vec3(0, 1, 0));
 		modelViewProj = camera.getViewProj() * model;
@@ -268,6 +270,14 @@ int main(int argc, char** argv) {
 		monkey.render();
 		shader.unbind();
 		framebuffer.unbind();
+
+		// Postprocessing
+		postprocessingShader.bind();
+		GLCALL(glActiveTexture(GL_TEXTURE0));
+		GLCALL(glBindTexture(GL_TEXTURE_2D, framebuffer.getTextureId()));
+		GLCALL(glUniform1i(glGetUniformLocation(postprocessingShader.getShaderId(), "u_texture"), 0));
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		postprocessingShader.unbind();
 
 		fontShader.bind();
 

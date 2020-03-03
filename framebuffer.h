@@ -35,6 +35,10 @@ struct Framebuffer {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
+    GLuint getTextureId() {
+        return textures[0];
+    }
+
     void unbind() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
